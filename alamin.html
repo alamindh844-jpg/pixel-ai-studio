@@ -1,0 +1,450 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pixel AI — Text to Image</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root {
+  --bg:#090b13;
+  --panel:#121625;
+  --text:#f5f6ff;
+  --muted:#9299ae;
+  --purple:#9471ff;
+  --cyan:#50d9e8;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:Inter,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(ellipse at 15% 5%,#39236c55,transparent 35%),
+    radial-gradient(ellipse at 90% 80%,#126b8050,transparent 35%),
+    var(--bg);
+}
+header{
+  height:75px;
+  padding:0 7%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid #ffffff12;
+}
+.logo{
+  font:700 25px 'Space Grotesk';
+  letter-spacing:-1px;
+}
+.logo span{color:var(--purple)}
+.tag{
+  color:#c7b8ff;
+  background:#9471ff20;
+  padding:8px 13px;
+  border:1px solid #9471ff45;
+  border-radius:30px;
+  font-size:12px;
+}
+main{
+  max-width:1150px;
+  margin:55px auto;
+  padding:0 20px;
+}
+.hero{text-align:center;margin-bottom:38px}
+.hero h1{
+  font:700 clamp(34px,6vw,55px) 'Space Grotesk';
+  margin:0 0 12px;
+  letter-spacing:-2px;
+}
+.hero h1 span{
+  background:linear-gradient(90deg,#a58aff,#51ddeb);
+  -webkit-background-clip:text;
+  color:transparent;
+}
+.hero p{color:var(--muted);line-height:1.6}
+.workspace{
+  display:grid;
+  grid-template-columns:390px 1fr;
+  gap:22px;
+}
+.panel{
+  background:#121625e8;
+  border:1px solid #ffffff13;
+  border-radius:20px;
+  padding:24px;
+  box-shadow:0 20px 60px #0005;
+}
+.panel h2{font-size:17px;margin:0 0 22px}
+label{
+  display:block;
+  color:#c7cbe0;
+  font-size:13px;
+  font-weight:600;
+  margin:17px 0 9px;
+}
+textarea,input,select{
+  width:100%;
+  border:1px solid #ffffff18;
+  background:#090e1b;
+  color:white;
+  border-radius:11px;
+  padding:13px;
+  font:14px Inter;
+  outline:none;
+}
+textarea{height:125px;resize:vertical;line-height:1.6}
+textarea:focus,input:focus,select:focus{border-color:var(--purple)}
+select{cursor:pointer}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hint{font-size:11px;color:var(--muted);line-height:1.5;margin-top:7px}
+.generate{
+  width:100%;
+  border:0;
+  padding:15px;
+  border-radius:12px;
+  margin-top:22px;
+  color:white;
+  font-size:15px;
+  font-weight:800;
+  cursor:pointer;
+  background:linear-gradient(100deg,#8055ef,#3abedb);
+  box-shadow:0 8px 25px #7650dc40;
+  transition:.2s;
+}
+.generate:hover{transform:translateY(-2px);filter:brightness(1.12)}
+.generate:disabled{opacity:.6;cursor:wait;transform:none}
+.preview{
+  min-height:520px;
+  display:flex;
+  flex-direction:column;
+}
+.preview-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:17px;
+}
+.preview-head h2{margin:0;font-size:17px}
+.status{font-size:12px;color:var(--muted)}
+.image-area{
+  flex:1;
+  min-height:400px;
+  border:1px dashed #ffffff2c;
+  border-radius:15px;
+  background:
+    radial-gradient(circle at 50% 40%,#392c6940,transparent 55%),
+    #0b1020;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  position:relative;
+}
+.image-area img{
+  width:100%;
+  height:100%;
+  max-height:560px;
+  object-fit:contain;
+  display:none;
+}
+.empty{text-align:center;padding:25px;color:var(--muted)}
+.empty .symbol{font-size:55px;margin-bottom:15px}
+.empty h3{color:#e4e5f2;font-size:17px}
+.empty p{font-size:13px;line-height:1.6}
+.loader{
+  display:none;
+  text-align:center;
+  color:#d8d0ff;
+}
+.spinner{
+  width:43px;height:43px;
+  border:3px solid #ffffff20;
+  border-top-color:#a58aff;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin:0 auto 15px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.actions{display:flex;gap:10px;margin-top:15px}
+.action{
+  flex:1;
+  padding:12px;
+  border-radius:10px;
+  background:#20283b;
+  border:1px solid #ffffff17;
+  color:white;
+  cursor:pointer;
+  font-weight:600;
+}
+.action:hover{background:#303b55}
+.action:disabled{opacity:.4;cursor:not-allowed}
+footer{
+  text-align:center;
+  color:#777f96;
+  font-size:12px;
+  padding:30px 15px;
+}
+.notice{
+  background:#dba83b12;
+  border:1px solid #dba83b35;
+  padding:12px;
+  border-radius:10px;
+  color:#e8ca8b;
+  font-size:11px;
+  line-height:1.6;
+  margin-top:15px;
+}
+@media(max-width:850px){
+  .workspace{grid-template-columns:1fr}
+  main{margin:35px auto}
+  .preview{min-height:450px}
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="logo">PIXEL<span>AI.</span></div>
+  <div class="tag">✦ AI IMAGE STUDIO</div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Turn Your Words Into <span>Art.</span></h1>
+    <p>Describe your imagination. Let AI create something beautiful.</p>
+  </section>
+
+  <section class="workspace">
+    <div class="panel">
+      <h2>✦ Create your image</h2>
+
+      <label for="apiKey">Pollinations API Key</label>
+      <input id="apiKey" type="password" placeholder="Enter your API key">
+      <div class="hint">For local testing only. Never publish a page containing your secret key.</div>
+
+      <label for="prompt">Your Prompt</label>
+      <textarea id="prompt" placeholder="A magical village in the mountains, cinematic sunset, beautiful lighting, ultra detailed..."></textarea>
+
+      <div class="row">
+        <div>
+          <label for="style">Art Style</label>
+          <select id="style">
+            <option value="">Natural</option>
+            <option value="cinematic photography, realistic">Realistic</option>
+            <option value="anime illustration, beautiful anime art">Anime</option>
+            <option value="3D render, Pixar-like 3D animation style">3D Art</option>
+            <option value="digital painting, concept art">Digital Art</option>
+            <option value="watercolor painting">Watercolor</option>
+            <option value="fantasy art, magical atmosphere">Fantasy</option>
+            <option value="minimalist vector illustration">Vector</option>
+          </select>
+        </div>
+        <div>
+          <label for="ratio">Aspect Ratio</label>
+          <select id="ratio">
+            <option value="1024,1024">Square 1:1</option>
+            <option value="1024,1536">Portrait 2:3</option>
+            <option value="1536,1024">Landscape 3:2</option>
+            <option value="1024,1792">Story 9:16</option>
+            <option value="1792,1024">Wide 16:9</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="model">AI Model</label>
+      <select id="model">
+        <option value="black-forest-labs/flux.1-schnell">FLUX Schnell</option>
+        <option value="google/gemini-2.5-flash-image">Gemini Flash Image</option>
+        <option value="black-forest-labs/flux.2-pro">FLUX 2 Pro</option>
+      </select>
+
+      <button class="generate" id="generateBtn" onclick="generateImage()">
+        ✨ Generate Image
+      </button>
+
+      <div class="notice">
+        API usage may require an account or credits. Availability and cost depend on the selected model and service terms.
+      </div>
+    </div>
+
+    <div class="panel preview">
+      <div class="preview-head">
+        <h2>Your Creation</h2>
+        <span class="status" id="status">Waiting for prompt</span>
+      </div>
+
+      <div class="image-area">
+        <div class="empty" id="empty">
+          <div class="symbol">🎨</div>
+          <h3>Your artwork appears here</h3>
+          <p>Write a prompt and press Generate Image<br>to create your first artwork.</p>
+        </div>
+
+        <div class="loader" id="loader">
+          <div class="spinner"></div>
+          Creating your artwork...
+          <p class="hint">This may take a little time.</p>
+        </div>
+
+        <img id="resultImage" alt="AI generated artwork">
+      </div>
+
+      <div class="actions">
+        <button class="action" id="downloadBtn" onclick="downloadImage()" disabled>
+          ↓ Download Image
+        </button>
+        <button class="action" onclick="resetImage()">↻ New Image</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>PIXEL AI STUDIO · Made for creative imagination</footer>
+
+<script>
+let imageBlob = null;
+
+const promptBox = document.getElementById("prompt");
+const image = document.getElementById("resultImage");
+const empty = document.getElementById("empty");
+const loader = document.getElementById("loader");
+const statusText = document.getElementById("status");
+const generateBtn = document.getElementById("generateBtn");
+const downloadBtn = document.getElementById("downloadBtn");
+
+async function generateImage() {
+  const apiKey = document.getElementById("apiKey").value.trim();
+  const prompt = promptBox.value.trim();
+  const style = document.getElementById("style").value;
+  const model = document.getElementById("model").value;
+  const [width, height] = document.getElementById("ratio").value.split(",");
+
+  if (!apiKey) {
+    alert("Please enter your Pollinations API key.");
+    return;
+  }
+
+  if (!prompt) {
+    alert("Please write an image prompt first.");
+    promptBox.focus();
+    return;
+  }
+
+  const finalPrompt = style
+    ? `${prompt}, ${style}, high quality, detailed composition`
+    : `${prompt}, high quality, detailed composition`;
+
+  const url =
+    "https://gen.pollinations.ai/image/" +
+    encodeURIComponent(finalPrompt) +
+    "?model=" + encodeURIComponent(model) +
+    "&width=" + width +
+    "&height=" + height +
+    "&safe=true";
+
+  generateBtn.disabled = true;
+  generateBtn.textContent = "Creating...";
+  statusText.textContent = "Generating image...";
+  empty.style.display = "none";
+  image.style.display = "none";
+  loader.style.display = "block";
+  downloadBtn.disabled = true;
+  imageBlob = null;
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Authorization": "Bearer " + apiKey
+      }
+    });
+
+    if (!response.ok) {
+      const message = await response.text();
+      throw new Error("API error " + response.status + ": " + message.slice(0, 250));
+    }
+
+    const blob = await response.blob();
+
+    if (!blob.type.startsWith("image/")) {
+      throw new Error("The API did not return an image. Please check your key and model.");
+    }
+
+    imageBlob = blob;
+    const objectURL = URL.createObjectURL(blob);
+
+    image.onload = () => {
+      loader.style.display = "none";
+      image.style.display = "block";
+      statusText.textContent = "Image generated ✓";
+      downloadBtn.disabled = false;
+    };
+
+    image.onerror = () => {
+      throw new Error("Could not display the generated image.");
+    };
+
+    image.src = objectURL;
+
+  } catch (error) {
+    loader.style.display = "none";
+    empty.style.display = "block";
+    empty.innerHTML = `
+      <div class="symbol">⚠️</div>
+      <h3>Image generation failed</h3>
+      <p>${escapeHTML(error.message)}</p>
+      <p>Check your API key, model access and internet connection.</p>
+    `;
+    statusText.textContent = "Generation failed";
+  } finally {
+    generateBtn.disabled = false;
+    generateBtn.textContent = "✨ Generate Image";
+  }
+}
+
+function downloadImage() {
+  if (!imageBlob) return;
+
+  const link = document.createElement("a");
+  const objectURL = URL.createObjectURL(imageBlob);
+
+  link.href = objectURL;
+  link.download = "pixel-ai-artwork.png";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  setTimeout(() => URL.revokeObjectURL(objectURL), 1000);
+}
+
+function resetImage() {
+  image.style.display = "none";
+  image.removeAttribute("src");
+  loader.style.display = "none";
+  empty.style.display = "block";
+  empty.innerHTML = `
+    <div class="symbol">🎨</div>
+    <h3>Your artwork appears here</h3>
+    <p>Write a prompt and press Generate Image<br>to create your next artwork.</p>
+  `;
+  statusText.textContent = "Waiting for prompt";
+  downloadBtn.disabled = true;
+  imageBlob = null;
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[char]);
+}
+</script>
+</body>
+</html>
